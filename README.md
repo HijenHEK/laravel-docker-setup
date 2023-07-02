@@ -15,7 +15,7 @@ $ git clone https://github.com/HijenHEK/laravel-docker-setup.git
 ```
 2) copy files to your project directory
 ```
-$ cp -r laravel-docker-setup <your-laravel-project-directory>
+$ cp -r laravel-docker-setup/* <your-laravel-project-directory>
 ```
 3) add the env variable to your .env or use default values
 ```
