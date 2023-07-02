@@ -1,0 +1,62 @@
+version: "3.7"
+services:
+    app-api:
+        build:
+            args:
+                user: ${SERVER_USER:-foulen}
+                uid: ${SERVER_USER_UID:-1000}
+            context: ./
+            dockerfile: Dockerfile
+        image: app
+        container_name: app-api
+        restart: unless-stopped
+        working_dir: /var/www/
+        command: bash -c " composer install && php artisan migrate && php artisan optimize && php-fpm"
+        depends_on:
+            - app-db
+        volumes:
+            - ./:/var/www
+        networks:
+            - app-api
+            - app-web
+
+    app-db:
+        image: mysql:8.0
+        container_name: app-db
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE-database}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD-password}
+            MYSQL_PASSWORD: ${DB_PASSWORD-password}
+            MYSQL_USER: ${DB_USERNAME-foulen}
+        ports:
+            - ${FORWARD_DB_PORT-33066}:3306
+        networks:
+            - app-api
+
+    app-web:
+        image: nginx:alpine
+        container_name: app-web
+        restart: unless-stopped
+        depends_on:
+            - app-api
+        ports:
+            - ${APP_PORT-8000}:80
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx:/etc/nginx/conf.d/
+        networks:
+            - app-web
+    app-mail:
+        image: mailhog/mailhog
+        container_name: app-mail
+        ports:
+            - ${MAIL_PORT-8003}:1025
+            - ${MAILHOG_PORT-8100}:8025
+        networks:
+            - app-api
+networks:
+    app-api:
+        driver: bridge
+    app-web:
+        driver: bridge
